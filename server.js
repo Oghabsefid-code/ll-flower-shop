@@ -1,127 +1,112 @@
-const express = require("express")
-const path = require("path")
-const sqlite3 = require("sqlite3").verbose()
-const multer = require("multer")
-const cloudinary = require("cloudinary").v2
+const express = require("express");
+const path = require("path");
+const sqlite3 = require("sqlite3").verbose();
+const multer = require("multer");
+const cloudinary = require("cloudinary").v2;
 
-const app = express()
-const PORT = process.env.PORT || 3000
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-app.use(express.json({limit:"20mb"}))
-app.use(express.urlencoded({extended:true}))
-app.use(express.static(path.join(__dirname,"public")))
-
+/* ---------- CLOUDINARY ---------- */
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-})
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-const upload = multer({storage:multer.memoryStorage()})
+/* ---------- MIDDLEWARE ---------- */
+app.use(express.json({ limit: "20mb" }));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "public")));
 
-const dbPath = path.join(__dirname,"database.db")
+const upload = multer({ storage: multer.memoryStorage() });
 
-const db = new sqlite3.Database(dbPath,(err)=>{
-  if(err){
-    console.log(err)
-  }else{
-    console.log("DB connected")
+/* ---------- DATABASE ---------- */
+const dbPath = path.join(__dirname, "database.db");
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error("DB connection error:", err.message);
+  } else {
+    console.log("DB connected:", dbPath);
   }
-})
+});
 
-function run(sql,params=[]){
-  return new Promise((resolve,reject)=>{
-    db.run(sql,params,function(err){
-      if(err) reject(err)
-      else resolve(this)
-    })
-  })
-}
+/* ---------- TABLE ---------- */
+db.run(`
+CREATE TABLE IF NOT EXISTS menu (
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+name TEXT,
+price TEXT,
+category TEXT,
+image TEXT,
+stock INTEGER DEFAULT 0
+)
+`);
 
-function get(sql,params=[]){
-  return new Promise((resolve,reject)=>{
-    db.get(sql,params,(err,row)=>{
-      if(err) reject(err)
-      else resolve(row)
-    })
-  })
-}
+/* ---------- API: GET MENU ---------- */
+app.get("/api/menu/all", (req, res) => {
+  db.all("SELECT * FROM menu", [], (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json(rows);
+  });
+});
 
-function all(sql,params=[]){
-  return new Promise((resolve,reject)=>{
-    db.all(sql,params,(err,row)=>{
-      if(err) reject(err)
-      else resolve(row)
-    })
-  })
-}
+/* ---------- API: ADD ITEM ---------- */
+app.post("/api/menu/add", upload.single("image"), async (req, res) => {
+  try {
+    let imageUrl = "";
 
-async function init(){
-  await run(`
-  CREATE TABLE IF NOT EXISTS menu(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
-    price INTEGER,
-    image TEXT,
-    stock INTEGER
-  )
-  `)
-}
+    if (req.file) {
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "flowers" },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        stream.end(req.file.buffer);
+      });
 
-init()
+      imageUrl = result.secure_url;
+    }
 
-app.get("/api/menu/all",async(req,res)=>{
-  const rows = await all("SELECT * FROM menu ORDER BY id DESC")
-  res.json(rows)
-})
+    const { name, price, category, stock } = req.body;
 
-app.post("/api/menu/add",async(req,res)=>{
-  const {name,price,image,stock} = req.body
-  await run(
-    "INSERT INTO menu(name,price,image,stock) VALUES(?,?,?,?)",
-    [name,price,image,stock]
-  )
-  res.json({ok:true})
-})
-
-app.post("/api/menu/update",async(req,res)=>{
-  const {id,name,price,image,stock} = req.body
-  await run(
-    "UPDATE menu SET name=?,price=?,image=?,stock=? WHERE id=?",
-    [name,price,image,stock,id]
-  )
-  res.json({ok:true})
-})
-
-app.post("/api/menu/delete",async(req,res)=>{
-  const {id} = req.body
-  await run("DELETE FROM menu WHERE id=?",[id])
-  res.json({ok:true})
-})
-
-app.post("/api/upload",upload.single("image"),async(req,res)=>{
-  try{
-
-    const result = await new Promise((resolve,reject)=>{
-      const stream = cloudinary.uploader.upload_stream(
-        {folder:"flowers"},
-        (err,result)=>{
-          if(err) reject(err)
-          else resolve(result)
+    db.run(
+      "INSERT INTO menu(name,price,category,image,stock) VALUES(?,?,?,?,?)",
+      [name, price, category, imageUrl, stock],
+      function (err) {
+        if (err) {
+          res.status(500).json({ error: err.message });
+          return;
         }
-      )
-      stream.end(req.file.buffer)
-    })
-
-    res.json({
-      url: result.secure_url
-    })
-
-  }catch(e){
-    res.status(500).json({error:e.message})
+        res.json({ success: true });
+      }
+    );
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Upload error" });
   }
-})
+});
 
-app.listen(PORT,()=>{
-  console.log("Server running "+PORT)
-})
+/* ---------- API: DELETE ITEM ---------- */
+app.post("/api/menu/delete", (req, res) => {
+  const { id } = req.body;
+
+  db.run("DELETE FROM menu WHERE id=?", [id], function (err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json({ success: true });
+  });
+});
+
+/* ---------- SERVER ---------- */
+app.listen(PORT, () => {
+  console.log("Server running on port " + PORT);
+});
