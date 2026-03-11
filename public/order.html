@@ -5,8 +5,55 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>L&L - Order</title>
   <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .product-image-clickable {
+      cursor: zoom-in;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-radius 0.25s ease;
+      position: relative;
+      z-index: 1;
+    }
+
+    .product-image-clickable.zoomed {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(1.55);
+      max-width: 78vw;
+      max-height: 78vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      z-index: 99999;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+      background: #fff;
+      cursor: zoom-out;
+    }
+
+    .zoom-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.28);
+      z-index: 99998;
+      display: none;
+    }
+
+    .zoom-backdrop.show {
+      display: block;
+    }
+
+    @media (max-width: 768px) {
+      .product-image-clickable.zoomed {
+        max-width: 90vw;
+        max-height: 72vh;
+        transform: translate(-50%, -50%) scale(1.12);
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="zoom-backdrop" id="zoomBackdrop" onclick="closeZoomedImage()"></div>
+
   <div class="banner">
     <img src="/images/header.jpg" alt="L&L Header">
   </div>
@@ -85,8 +132,8 @@
       <div class="confirm-title" id="confirmTitle">هل أنت متأكد؟</div>
       <div class="confirm-text" id="confirmText">هل أنت متأكد من إرسال هذا الطلب؟</div>
       <div class="confirm-actions">
-        <button class="btn btn-main" id="confirmYesBtn" onclick="submitOrder()">مطمئنم</button>
-        <button class="btn btn-soft" id="confirmNoBtn" onclick="closeConfirm()">ادامه خرید</button>
+        <button class="btn btn-main" id="confirmYesBtn" onclick="submitOrder()">أنا متأكد</button>
+        <button class="btn btn-soft" id="confirmNoBtn" onclick="closeConfirm()">متابعة التسوق</button>
       </div>
     </div>
   </div>
@@ -134,8 +181,8 @@
         addressHelp: "يكفي إدخال العنوان أو اللوكيشن أو الاثنين معاً",
         confirmTitle: "هل أنت متأكد؟",
         confirmText: "هل أنت متأكد من إرسال هذا الطلب؟",
-        confirmYes: "مطمئنم",
-        confirmNo: "ادامه خرید"
+        confirmYes: "أنا متأكد",
+        confirmNo: "متابعة التسوق"
       },
       en: {
         subbrand: "Retail sale of flowers, roses and plants",
@@ -235,6 +282,7 @@
       longitude: "",
       location_text: ""
     };
+    let zoomedImage = null;
 
     function text(key) {
       return T[lang][key] || key;
@@ -289,6 +337,30 @@
       renderFlowers();
     }
 
+    function toggleZoomImage(imgEl) {
+      if (zoomedImage && zoomedImage !== imgEl) {
+        zoomedImage.classList.remove("zoomed");
+      }
+
+      if (imgEl.classList.contains("zoomed")) {
+        imgEl.classList.remove("zoomed");
+        document.getElementById("zoomBackdrop").classList.remove("show");
+        zoomedImage = null;
+      } else {
+        imgEl.classList.add("zoomed");
+        document.getElementById("zoomBackdrop").classList.add("show");
+        zoomedImage = imgEl;
+      }
+    }
+
+    function closeZoomedImage() {
+      if (zoomedImage) {
+        zoomedImage.classList.remove("zoomed");
+        zoomedImage = null;
+      }
+      document.getElementById("zoomBackdrop").classList.remove("show");
+    }
+
     function renderFlowers() {
       const box = document.getElementById("flowers");
 
@@ -297,9 +369,14 @@
         return;
       }
 
-      box.innerHTML = flowers.map(f => `
+      box.innerHTML = flowers.map((f, idx) => `
         <div class="card">
-          <img src="${f.image || 'https://via.placeholder.com/600x400?text=Flower'}" alt="${f.name}">
+          <img
+            src="${f.image || 'https://via.placeholder.com/600x400?text=Flower'}"
+            alt="${f.name}"
+            class="product-image-clickable"
+            onclick="toggleZoomImage(this)"
+          >
           <div class="card-body">
             <h3>${f.name}</h3>
             <div class="price">KD ${Number(f.price).toLocaleString()}</div>
@@ -412,6 +489,10 @@
     }
 
     function openConfirm() {
+      document.getElementById("confirmTitle").textContent = text("confirmTitle");
+      document.getElementById("confirmText").textContent = text("confirmText");
+      document.getElementById("confirmYesBtn").textContent = text("confirmYes");
+      document.getElementById("confirmNoBtn").textContent = text("confirmNo");
       document.getElementById("confirmOverlay").style.display = "flex";
     }
 
@@ -487,6 +568,10 @@
 
       location.href = "/thankyou.html";
     }
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeZoomedImage();
+    });
 
     setLang(lang);
     loadFlowers();
