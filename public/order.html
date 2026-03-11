@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>L&L - Order</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="banner">
+    <img src="/images/header.jpg" alt="L&L Header">
+  </div>
+
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div>
+        <div class="brand">L&L</div>
+        <div class="subbrand" data-i18n="subbrand">للبيع بالتجزئة للزهور والورود والنباتات</div>
+      </div>
+
+      <div class="lang-switch">
+        <button class="lang-btn active" onclick="setLang('ar')">العربية</button>
+        <button class="lang-btn" onclick="setLang('en')">English</button>
+        <button class="lang-btn" onclick="setLang('fa')">فارسی</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="hero">
+      <h1 data-i18n="title">تسجيل الطلب</h1>
+      <p data-i18n="subtitle">اختر الزهور المطلوبة وحدد الكمية ثم أكمل بيانات الطلب.</p>
+    </div>
+
+    <div id="flowers" class="grid"></div>
+
+    <div class="panel">
+      <h2 data-i18n="cartTitle">سلة الطلب</h2>
+      <div id="cartList"></div>
+      <div class="total-box" id="totalBox">المجموع: KD 0</div>
+
+      <div class="spacer"></div>
+
+      <div class="form-grid">
+        <div>
+          <label id="labelName">اسم العميل</label>
+          <input id="customer_name">
+        </div>
+
+        <div>
+          <label id="labelPhone">رقم الهاتف</label>
+          <input id="phone">
+        </div>
+
+        <div>
+          <label id="labelAddress">العنوان</label>
+          <input id="address">
+        </div>
+
+        <div style="grid-column:1 / -1;">
+          <label id="labelNote">ملاحظات</label>
+          <textarea id="note"></textarea>
+        </div>
+
+        <div style="grid-column:1 / -1;">
+          <label id="labelLocation">الموقع</label>
+          <div class="location-box">
+            <div id="locationPreview">لم يتم تحديد الموقع بعد</div>
+            <div class="location-actions">
+              <button type="button" class="btn btn-soft" id="locationBtn" onclick="getLocation()">تسجيل اللوكيشن</button>
+              <button type="button" class="btn btn-copy" id="clearLocationBtn" onclick="clearLocation()">مسح اللوكيشن</button>
+            </div>
+            <div class="small-text" id="addressHelp"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+      <button class="btn btn-main" id="submitBtn" onclick="prepareSubmit()">تأكيد الطلب</button>
+    </div>
+  </div>
+
+  <div class="confirm-overlay" id="confirmOverlay">
+    <div class="confirm-box">
+      <div class="confirm-title" id="confirmTitle">هل أنت متأكد؟</div>
+      <div class="confirm-text" id="confirmText">هل أنت متأكد من إرسال هذا الطلب؟</div>
+      <div class="confirm-actions">
+        <button class="btn btn-main" id="confirmYesBtn" onclick="submitOrder()">مطمئنم</button>
+        <button class="btn btn-soft" id="confirmNoBtn" onclick="closeConfirm()">ادامه خرید</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const T = {
+      ar: {
+        subbrand: "للبيع بالتجزئة للزهور والورود والنباتات",
+        title: "تسجيل الطلب",
+        subtitle: "اختر الزهور المطلوبة وحدد الكمية ثم أكمل بيانات الطلب.",
+        cartTitle: "سلة الطلب",
+        total: "المجموع: KD ",
+        name: "اسم العميل",
+        phone: "رقم الهاتف",
+        address: "العنوان",
+        note: "ملاحظات",
+        location: "الموقع",
+        submit: "تأكيد الطلب",
+        add: "إضافة",
+        qty: "الكمية",
+        category: "التصنيف",
+        stock: "المتوفر",
+        emptyFlowers: "لا توجد منتجات حالياً.",
+        emptyCart: "سلة الطلب فارغة.",
+        remove: "حذف",
+        unitPrice: "سعر الوحدة",
+        sum: "الإجمالي",
+        invalidQty: "الكمية غير صحيحة",
+        noStock: "الكمية المطلوبة أكبر من المخزون",
+        noName: "أدخل اسم العميل",
+        cartEmptyAlert: "السلة فارغة",
+        orderDone: "تم تسجيل الطلب",
+        locationBtn: "تسجيل اللوكيشن",
+        clearLocationBtn: "مسح اللوكيشن",
+        gettingLocation: "جاري تحديد الموقع...",
+        locationSaved: "تم حفظ الموقع",
+        noGeo: "المتصفح لا يدعم تحديد الموقع",
+        geoError: "تعذر الحصول على الموقع",
+        placeholderName: "مثلاً أحمد",
+        placeholderPhone: "مثلاً 98765432",
+        placeholderAddress: "عنوان التوصيل",
+        placeholderNote: "مثلاً أضف بطاقة تهنئة",
+        noLocationYet: "لم يتم تحديد الموقع بعد",
+        needAddressOrLocation: "يجب إدخال العنوان أو تسجيل اللوكيشن على الأقل",
+        addressHelp: "يكفي إدخال العنوان أو اللوكيشن أو الاثنين معاً",
+        confirmTitle: "هل أنت متأكد؟",
+        confirmText: "هل أنت متأكد من إرسال هذا الطلب؟",
+        confirmYes: "مطمئنم",
+        confirmNo: "ادامه خرید"
+      },
+      en: {
+        subbrand: "Retail sale of flowers, roses and plants",
+        title: "Place Your Order",
+        subtitle: "Choose flowers, set quantity, then complete your order details.",
+        cartTitle: "Shopping Cart",
+        total: "Total: KD ",
+        name: "Customer Name",
+        phone: "Phone Number",
+        address: "Address",
+        note: "Notes",
+        location: "Location",
+        submit: "Submit Order",
+        add: "Add",
+        qty: "Qty",
+        category: "Category",
+        stock: "Stock",
+        emptyFlowers: "No products found.",
+        emptyCart: "Your cart is empty.",
+        remove: "Remove",
+        unitPrice: "Unit Price",
+        sum: "Total",
+        invalidQty: "Invalid quantity",
+        noStock: "Selected quantity exceeds stock",
+        noName: "Enter customer name",
+        cartEmptyAlert: "Cart is empty",
+        orderDone: "Order submitted",
+        locationBtn: "Save Location",
+        clearLocationBtn: "Clear Location",
+        gettingLocation: "Getting location...",
+        locationSaved: "Location saved",
+        noGeo: "Geolocation is not supported",
+        geoError: "Could not get location",
+        placeholderName: "e.g. John",
+        placeholderPhone: "e.g. 98765432",
+        placeholderAddress: "Delivery address",
+        placeholderNote: "e.g. add a greeting card",
+        noLocationYet: "No location selected yet",
+        needAddressOrLocation: "Address or location is required",
+        addressHelp: "Address or location or both are acceptable",
+        confirmTitle: "Are you sure?",
+        confirmText: "Are you sure you want to submit this order?",
+        confirmYes: "I am sure",
+        confirmNo: "Continue Shopping"
+      },
+      fa: {
+        subbrand: "فروش خرده‌فروشی گل‌ها، رزها و گیاهان",
+        title: "ثبت سفارش",
+        subtitle: "گل مورد نظر را انتخاب کن، تعداد را مشخص کن و اطلاعات سفارش را کامل کن.",
+        cartTitle: "سبد سفارش",
+        total: "جمع کل: KD ",
+        name: "نام مشتری",
+        phone: "شماره تماس",
+        address: "آدرس",
+        note: "توضیحات",
+        location: "لوکیشن",
+        submit: "ثبت سفارش",
+        add: "افزودن",
+        qty: "تعداد",
+        category: "دسته",
+        stock: "موجودی",
+        emptyFlowers: "فعلاً محصولی ثبت نشده است.",
+        emptyCart: "سبد سفارش خالی است.",
+        remove: "حذف",
+        unitPrice: "قیمت واحد",
+        sum: "جمع",
+        invalidQty: "تعداد نامعتبر است",
+        noStock: "تعداد انتخابی بیشتر از موجودی است",
+        noName: "نام مشتری را وارد کن",
+        cartEmptyAlert: "سبد خالی است",
+        orderDone: "سفارش ثبت شد",
+        locationBtn: "ثبت لوکیشن",
+        clearLocationBtn: "حذف لوکیشن",
+        gettingLocation: "در حال دریافت لوکیشن...",
+        locationSaved: "لوکیشن ذخیره شد",
+        noGeo: "مرورگر از لوکیشن پشتیبانی نمی‌کند",
+        geoError: "دریافت لوکیشن ناموفق بود",
+        placeholderName: "مثلاً علیرضا",
+        placeholderPhone: "مثلاً 98765432",
+        placeholderAddress: "آدرس تحویل",
+        placeholderNote: "مثلاً کارت تبریک اضافه شود",
+        noLocationYet: "هنوز لوکیشنی ثبت نشده",
+        needAddressOrLocation: "باید آدرس یا لوکیشن را وارد کنی",
+        addressHelp: "یکی از این دو کافی است: آدرس یا لوکیشن",
+        confirmTitle: "مطمئنی؟",
+        confirmText: "آیا از ثبت این سفارش مطمئنی؟",
+        confirmYes: "مطمئنم",
+        confirmNo: "ادامه خرید"
+      }
+    };
+
+    let lang = localStorage.getItem("site_lang") || "ar";
+    let flowers = [];
+    let cart = [];
+    let locationData = {
+      latitude: "",
+      longitude: "",
+      location_text: ""
+    };
+
+    function text(key) {
+      return T[lang][key] || key;
+    }
+
+    function setLang(newLang) {
+      lang = newLang;
+      localStorage.setItem("site_lang", lang);
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === "en" ? "ltr" : "rtl";
+
+      document.querySelectorAll(".lang-btn").forEach(btn => btn.classList.remove("active"));
+      if (lang === "ar") document.querySelectorAll(".lang-btn")[0].classList.add("active");
+      if (lang === "en") document.querySelectorAll(".lang-btn")[1].classList.add("active");
+      if (lang === "fa") document.querySelectorAll(".lang-btn")[2].classList.add("active");
+
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.dataset.i18n;
+        el.textContent = T[lang][key] || "";
+      });
+
+      document.getElementById("labelName").textContent = text("name");
+      document.getElementById("labelPhone").textContent = text("phone");
+      document.getElementById("labelAddress").textContent = text("address");
+      document.getElementById("labelNote").textContent = text("note");
+      document.getElementById("labelLocation").textContent = text("location");
+      document.getElementById("submitBtn").textContent = text("submit");
+      document.getElementById("locationBtn").textContent = text("locationBtn");
+      document.getElementById("clearLocationBtn").textContent = text("clearLocationBtn");
+      document.getElementById("addressHelp").textContent = text("addressHelp");
+      document.getElementById("confirmTitle").textContent = text("confirmTitle");
+      document.getElementById("confirmText").textContent = text("confirmText");
+      document.getElementById("confirmYesBtn").textContent = text("confirmYes");
+      document.getElementById("confirmNoBtn").textContent = text("confirmNo");
+
+      document.getElementById("customer_name").placeholder = text("placeholderName");
+      document.getElementById("phone").placeholder = text("placeholderPhone");
+      document.getElementById("address").placeholder = text("placeholderAddress");
+      document.getElementById("note").placeholder = text("placeholderNote");
+
+      if (!locationData.location_text) {
+        document.getElementById("locationPreview").textContent = text("noLocationYet");
+      }
+
+      renderFlowers();
+      renderCart();
+    }
+
+    async function loadFlowers() {
+      const res = await fetch("/api/flowers");
+      flowers = await res.json();
+      renderFlowers();
+    }
+
+    function renderFlowers() {
+      const box = document.getElementById("flowers");
+
+      if (!flowers.length) {
+        box.innerHTML = `<div class="panel empty">${text("emptyFlowers")}</div>`;
+        return;
+      }
+
+      box.innerHTML = flowers.map(f => `
+        <div class="card">
+          <img src="${f.image || 'https://via.placeholder.com/600x400?text=Flower'}" alt="${f.name}">
+          <div class="card-body">
+            <h3>${f.name}</h3>
+            <div class="price">KD ${Number(f.price).toLocaleString()}</div>
+            <div class="muted">${text("category")}: ${f.category || "-"}</div>
+            <div class="muted">${text("stock")}: ${f.stock}</div>
+            <div class="spacer"></div>
+            <div class="row">
+              <input id="qty-${f.id}" class="qty" type="number" min="1" value="1">
+              <button class="btn btn-main" onclick="addToCart(${f.id})">${text("add")}</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function addToCart(id) {
+      const flower = flowers.find(x => x.id === id);
+      const qty = Number(document.getElementById(`qty-${id}`).value || 1);
+
+      if (!flower) return;
+      if (qty <= 0) return alert(text("invalidQty"));
+      if (qty > flower.stock) return alert(text("noStock"));
+
+      const found = cart.find(x => x.id === id);
+      const currentQty = found ? found.qty : 0;
+
+      if ((currentQty + qty) > flower.stock) return alert(text("noStock"));
+
+      if (found) {
+        found.qty += qty;
+      } else {
+        cart.push({
+          id: flower.id,
+          name: flower.name,
+          price: flower.price,
+          qty: qty
+        });
+      }
+
+      renderCart();
+    }
+
+    function removeCartItem(id) {
+      cart = cart.filter(x => x.id !== id);
+      renderCart();
+    }
+
+    function renderCart() {
+      const list = document.getElementById("cartList");
+      const totalBox = document.getElementById("totalBox");
+
+      if (!cart.length) {
+        list.innerHTML = `<div class="empty">${text("emptyCart")}</div>`;
+        totalBox.textContent = text("total") + "0";
+        return;
+      }
+
+      list.innerHTML = cart.map(item => `
+        <div class="cart-item">
+          <div><b>${item.name}</b></div>
+          <div>${text("qty")}: ${item.qty}</div>
+          <div>${text("unitPrice")}: KD ${Number(item.price).toLocaleString()}</div>
+          <div>${text("sum")}: KD ${(item.qty * item.price).toLocaleString()}</div>
+          <div class="spacer"></div>
+          <button class="btn btn-danger" onclick="removeCartItem(${item.id})">${text("remove")}</button>
+        </div>
+      `).join("");
+
+      const total = cart.reduce((sum, item) => sum + item.qty * item.price, 0);
+      totalBox.textContent = text("total") + total.toLocaleString();
+    }
+
+    function getLocation() {
+      if (!navigator.geolocation) {
+        alert(text("noGeo"));
+        return;
+      }
+
+      document.getElementById("locationPreview").textContent = text("gettingLocation");
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+
+          locationData.latitude = lat;
+          locationData.longitude = lng;
+          locationData.location_text = `${lat}, ${lng}`;
+
+          document.getElementById("locationPreview").textContent =
+            `${text("locationSaved")}: ${lat}, ${lng}`;
+        },
+        () => {
+          alert(text("geoError"));
+          document.getElementById("locationPreview").textContent = text("noLocationYet");
+        }
+      );
+    }
+
+    function clearLocation() {
+      locationData = { latitude: "", longitude: "", location_text: "" };
+      document.getElementById("locationPreview").textContent = text("noLocationYet");
+    }
+
+    function hasAddressOrLocation() {
+      const address = document.getElementById("address").value.trim();
+      const hasAddress = address.length > 0;
+      const hasLocation = String(locationData.location_text || "").trim().length > 0;
+      return hasAddress || hasLocation;
+    }
+
+    function openConfirm() {
+      document.getElementById("confirmOverlay").style.display = "flex";
+    }
+
+    function closeConfirm() {
+      document.getElementById("confirmOverlay").style.display = "none";
+    }
+
+    function prepareSubmit() {
+      const customer_name = document.getElementById("customer_name").value.trim();
+
+      if (!customer_name) return alert(text("noName"));
+      if (!cart.length) return alert(text("cartEmptyAlert"));
+      if (!hasAddressOrLocation()) return alert(text("needAddressOrLocation"));
+
+      openConfirm();
+    }
+
+    async function submitOrder() {
+      closeConfirm();
+
+      const customer_name = document.getElementById("customer_name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const address = document.getElementById("address").value.trim();
+      const note = document.getElementById("note").value.trim();
+
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customer_name,
+          phone,
+          address,
+          note,
+          location_text: locationData.location_text,
+          latitude: locationData.latitude,
+          longitude: locationData.longitude,
+          items: cart
+        })
+      });
+
+      if (!res.ok) {
+        const txt = await res.text();
+        return alert("Error: " + txt);
+      }
+
+      const data = await res.json();
+
+      sessionStorage.setItem("last_order_summary", JSON.stringify({
+        order_id: data.order_id,
+        customer_name,
+        phone,
+        address,
+        note,
+        location_text: locationData.location_text,
+        latitude: locationData.latitude,
+        longitude: locationData.longitude,
+        items: data.items || cart,
+        total: data.total,
+        created_at: data.created_at
+      }));
+
+      cart = [];
+      locationData = { latitude: "", longitude: "", location_text: "" };
+
+      document.getElementById("customer_name").value = "";
+      document.getElementById("phone").value = "";
+      document.getElementById("address").value = "";
+      document.getElementById("note").value = "";
+      document.getElementById("locationPreview").textContent = text("noLocationYet");
+
+      renderCart();
+      loadFlowers();
+
+      location.href = "/thankyou.html";
+    }
+
+    setLang(lang);
+    loadFlowers();
+  </script>
+</body>
+</html>

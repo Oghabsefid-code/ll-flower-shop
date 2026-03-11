@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>L&L Orders</title>
+  <link rel="stylesheet" href="/css/style.css"/>
+  <style>
+    .new-order-row {
+      background: #fff8e8;
+      animation: pulseRow 1.2s ease-in-out 3;
+    }
+
+    @keyframes pulseRow {
+      0% { background: #fff0c7; }
+      50% { background: #fff8e8; }
+      100% { background: #fff0c7; }
+    }
+
+    .new-badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #c99a3b;
+      color: #fff;
+      font-size: 12px;
+      font-weight: bold;
+      margin-inline-start: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <img src="/images/header.jpg" alt="L&L Header">
+  </div>
+
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div>
+        <div class="brand">L&L</div>
+        <div class="subbrand" data-i18n="subbrand">للبيع بالتجزئة للزهور والورود والنباتات</div>
+      </div>
+
+      <div class="lang-switch">
+        <button class="lang-btn active" onclick="setLang('ar')">العربية</button>
+        <button class="lang-btn" onclick="setLang('en')">English</button>
+        <button class="lang-btn" onclick="setLang('fa')">فارسی</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="hero">
+      <h1 data-i18n="title">الطلبات</h1>
+      <p data-i18n="subtitle">يتم تحديث الصفحة تلقائياً كل 10 ثواني</p>
+      <div class="note-line" data-i18n="liveNote">التنبيه الصوتي للطلبات الجديدة مفعل</div>
+    </div>
+
+    <div class="panel table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th data-i18n="customer">العميل</th>
+            <th data-i18n="phone">الهاتف</th>
+            <th data-i18n="address">العنوان</th>
+            <th data-i18n="location">الموقع</th>
+            <th data-i18n="items">الطلبات</th>
+            <th data-i18n="total">الإجمالي</th>
+            <th data-i18n="status">الحالة</th>
+            <th data-i18n="time">الوقت</th>
+            <th data-i18n="actions">العمليات</th>
+          </tr>
+        </thead>
+        <tbody id="ordersBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const T = {
+      ar: {
+        subbrand: "للبيع بالتجزئة للزهور والورود والنباتات",
+        title: "الطلبات",
+        subtitle: "يتم تحديث الصفحة تلقائياً كل 10 ثواني",
+        liveNote: "التنبيه الصوتي للطلبات الجديدة مفعل",
+        customer: "العميل",
+        phone: "الهاتف",
+        address: "العنوان",
+        location: "الموقع",
+        items: "الطلبات",
+        total: "الإجمالي",
+        status: "الحالة",
+        time: "الوقت",
+        actions: "العمليات",
+        delete: "حذف",
+        map: "فتح الخريطة",
+        copy: "نسخ",
+        copied: "تم النسخ",
+        noLocation: "لا يوجد",
+        new: "جديد",
+        prep: "قيد التجهيز",
+        ready: "جاهز",
+        done: "تم التسليم",
+        deleteConfirm: "هل تريد حذف الطلب؟",
+        noOrders: "لا توجد طلبات",
+        fresh: "طلب جديد"
+      },
+      en: {
+        subbrand: "Retail sale of flowers, roses and plants",
+        title: "Orders",
+        subtitle: "Page refreshes every 10 seconds",
+        liveNote: "New order sound alert is enabled",
+        customer: "Customer",
+        phone: "Phone",
+        address: "Address",
+        location: "Location",
+        items: "Items",
+        total: "Total",
+        status: "Status",
+        time: "Time",
+        actions: "Actions",
+        delete: "Delete",
+        map: "Open Map",
+        copy: "Copy",
+        copied: "Copied",
+        noLocation: "None",
+        new: "New",
+        prep: "Preparing",
+        ready: "Ready",
+        done: "Delivered",
+        deleteConfirm: "Delete order?",
+        noOrders: "No Orders",
+        fresh: "New Order"
+      },
+      fa: {
+        subbrand: "فروش خرده فروشی گل ها، رزها و گیاهان",
+        title: "سفارش ها",
+        subtitle: "صفحه هر ۱۰ ثانیه رفرش می‌شود",
+        liveNote: "هشدار صوتی سفارش جدید فعال است",
+        customer: "مشتری",
+        phone: "تلفن",
+        address: "آدرس",
+        location: "لوکیشن",
+        items: "آیتم ها",
+        total: "جمع",
+        status: "وضعیت",
+        time: "زمان",
+        actions: "عملیات",
+        delete: "حذف",
+        map: "باز کردن نقشه",
+        copy: "کپی",
+        copied: "کپی شد",
+        noLocation: "ندارد",
+        new: "جدید",
+        prep: "در حال آماده سازی",
+        ready: "آماده",
+        done: "تحویل شد",
+        deleteConfirm: "این سفارش حذف شود؟",
+        noOrders: "سفارشی ثبت نشده",
+        fresh: "سفارش جدید"
+      }
+    };
+
+    let lang = localStorage.getItem("site_lang") || "ar";
+    let knownTopOrderId = null;
+    let initialized = false;
+
+    function text(k) {
+      return T[lang][k] || k;
+    }
+
+    function setLang(l) {
+      lang = l;
+      localStorage.setItem("site_lang", l);
+      document.documentElement.lang = l;
+      document.documentElement.dir = l === "en" ? "ltr" : "rtl";
+
+      document.querySelectorAll(".lang-btn").forEach(b => b.classList.remove("active"));
+      if (l === "ar") document.querySelectorAll(".lang-btn")[0].classList.add("active");
+      if (l === "en") document.querySelectorAll(".lang-btn")[1].classList.add("active");
+      if (l === "fa") document.querySelectorAll(".lang-btn")[2].classList.add("active");
+
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const k = el.dataset.i18n;
+        el.textContent = text(k);
+      });
+
+      loadOrders();
+    }
+
+    function formatTime(t) {
+      const d = new Date(t.replace(" ", "T"));
+      return d.toLocaleString("en-GB", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+    }
+
+    function statusOptions(current) {
+      return `
+        <option value="new" ${current === "new" ? "selected" : ""}>${text("new")}</option>
+        <option value="preparing" ${current === "preparing" ? "selected" : ""}>${text("prep")}</option>
+        <option value="ready" ${current === "ready" ? "selected" : ""}>${text("ready")}</option>
+        <option value="done" ${current === "done" ? "selected" : ""}>${text("done")}</option>
+      `;
+    }
+
+    function beepNewOrder() {
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+
+        const ctx = new AudioContextClass();
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(880, ctx.currentTime);
+        oscillator.frequency.setValueAtTime(660, ctx.currentTime + 0.18);
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        gainNode.gain.setValueAtTime(0.0001, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.45);
+
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.5);
+      } catch (e) {}
+    }
+
+    async function copyText(value) {
+      try {
+        await navigator.clipboard.writeText(value);
+        alert(text("copied"));
+      } catch {
+        alert(value);
+      }
+    }
+
+    async function loadOrders() {
+      const res = await fetch("/api/orders");
+      const orders = await res.json();
+      const body = document.getElementById("ordersBody");
+
+      if (!orders.length) {
+        body.innerHTML = `<tr><td colspan="10">${text("noOrders")}</td></tr>`;
+        return;
+      }
+
+      const topId = orders[0]?.id ?? null;
+      const hasFreshOrder = initialized && knownTopOrderId !== null && topId > knownTopOrderId;
+
+      if (!initialized) {
+        knownTopOrderId = topId;
+        initialized = true;
+      } else if (hasFreshOrder) {
+        knownTopOrderId = topId;
+        beepNewOrder();
+      } else {
+        knownTopOrderId = topId;
+      }
+
+      body.innerHTML = orders.map((o, index) => {
+        let items = [];
+        try {
+          items = JSON.parse(o.items);
+        } catch {}
+
+        let locationHtml = text("noLocation");
+
+        if (o.latitude && o.longitude) {
+          const coords = `${o.latitude}, ${o.longitude}`;
+          locationHtml = `
+            <div>${coords}</div>
+            <div class="location-actions">
+              <a class="btn btn-soft" target="_blank" href="https://maps.google.com/?q=${o.latitude},${o.longitude}">${text("map")}</a>
+              <button class="btn btn-copy" onclick='copyText(${JSON.stringify(coords)})'>${text("copy")}</button>
+            </div>
+          `;
+        } else if (o.location_text) {
+          locationHtml = `
+            <div>${o.location_text}</div>
+            <div class="location-actions">
+              <button class="btn btn-copy" onclick='copyText(${JSON.stringify(o.location_text)})'>${text("copy")}</button>
+            </div>
+          `;
+        }
+
+        const isFreshTopRow = hasFreshOrder && index === 0;
+        const freshBadge = isFreshTopRow ? `<span class="new-badge">${text("fresh")}</span>` : "";
+
+        return `
+          <tr class="${isFreshTopRow ? "new-order-row" : ""}">
+            <td>${o.id} ${freshBadge}</td>
+            <td>${o.customer_name || ""}</td>
+            <td>${o.phone || ""}</td>
+            <td>${o.address || ""}</td>
+            <td>${locationHtml}</td>
+            <td>${items.map(i => `${i.qty} × ${i.name}`).join("<br>")}</td>
+            <td>KD ${Number(o.total).toLocaleString()}</td>
+            <td>
+              <select onchange="changeStatus(${o.id},this.value)">
+                ${statusOptions(o.status)}
+              </select>
+            </td>
+            <td>${formatTime(o.created_at)}</td>
+            <td>
+              <button class="btn btn-danger" onclick="deleteOrder(${o.id})">
+                ${text("delete")}
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    async function changeStatus(id, status) {
+      await fetch(`/api/orders/${id}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ status })
+      });
+    }
+
+    async function deleteOrder(id) {
+      if (!confirm(text("deleteConfirm"))) return;
+
+      await fetch(`/api/orders/${id}`, {
+        method: "DELETE"
+      });
+
+      loadOrders();
+    }
+
+    setLang(lang);
+    loadOrders();
+    setInterval(loadOrders, 10000);
+  </script>
+</body>
+</html>

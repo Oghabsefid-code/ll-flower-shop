@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: ll-flower-order
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js

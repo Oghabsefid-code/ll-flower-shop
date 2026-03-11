@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>L&L - Thank You</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="banner">
+    <img src="/images/header.jpg" alt="L&L Header">
+  </div>
+
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div>
+        <div class="brand">L&L</div>
+        <div class="subbrand" data-i18n="subbrand">للبيع بالتجزئة للزهور والورود والنباتات</div>
+      </div>
+
+      <div class="lang-switch">
+        <button class="lang-btn active" onclick="setLang('ar')">العربية</button>
+        <button class="lang-btn" onclick="setLang('en')">English</button>
+        <button class="lang-btn" onclick="setLang('fa')">فارسی</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="hero">
+      <h1 data-i18n="title">شكراً لك</h1>
+      <p data-i18n="subtitle">تم تسجيل طلبك بنجاح، وهذه تفاصيله كاملة.</p>
+    </div>
+
+    <div class="summary-box" id="summaryBox"></div>
+
+    <div class="spacer"></div>
+
+    <div class="nav-links">
+      <a class="btn btn-main" href="/order.html" data-i18n="backOrder">العودة إلى الطلب</a>
+      <a class="btn btn-soft" href="/" data-i18n="backHome">الصفحة الرئيسية</a>
+    </div>
+  </div>
+
+  <script>
+    const T = {
+      ar: {
+        subbrand: "للبيع بالتجزئة للزهور والورود والنباتات",
+        title: "شكراً لك",
+        subtitle: "تم تسجيل طلبك بنجاح، وهذه تفاصيله كاملة.",
+        backOrder: "العودة إلى الطلب",
+        backHome: "الصفحة الرئيسية",
+        orderId: "رقم الطلب",
+        customer: "اسم العميل",
+        phone: "رقم الهاتف",
+        address: "العنوان",
+        note: "الملاحظات",
+        location: "اللوكيشن",
+        items: "المشتريات",
+        total: "الإجمالي",
+        time: "وقت الطلب",
+        noData: "لا توجد بيانات طلب لعرضها",
+        noValue: "-"
+      },
+      en: {
+        subbrand: "Retail sale of flowers, roses and plants",
+        title: "Thank You",
+        subtitle: "Your order has been placed successfully. Here are the full details.",
+        backOrder: "Back to Order",
+        backHome: "Home Page",
+        orderId: "Order ID",
+        customer: "Customer Name",
+        phone: "Phone Number",
+        address: "Address",
+        note: "Notes",
+        location: "Location",
+        items: "Items",
+        total: "Total",
+        time: "Order Time",
+        noData: "No order data found",
+        noValue: "-"
+      },
+      fa: {
+        subbrand: "فروش خرده‌فروشی گل‌ها، رزها و گیاهان",
+        title: "ممنون از شما",
+        subtitle: "سفارش شما با موفقیت ثبت شد. این هم جزئیات کامل سفارش.",
+        backOrder: "بازگشت به سفارش",
+        backHome: "صفحه اصلی",
+        orderId: "شماره سفارش",
+        customer: "نام مشتری",
+        phone: "شماره تماس",
+        address: "آدرس",
+        note: "توضیحات",
+        location: "لوکیشن",
+        items: "خریدها",
+        total: "جمع کل",
+        time: "زمان سفارش",
+        noData: "داده‌ای برای نمایش سفارش پیدا نشد",
+        noValue: "-"
+      }
+    };
+
+    let lang = localStorage.getItem("site_lang") || "ar";
+
+    function text(k) {
+      return T[lang][k] || k;
+    }
+
+    function setLang(l) {
+      lang = l;
+      localStorage.setItem("site_lang", l);
+      document.documentElement.lang = l;
+      document.documentElement.dir = l === "en" ? "ltr" : "rtl";
+
+      document.querySelectorAll(".lang-btn").forEach(b => b.classList.remove("active"));
+      if (l === "ar") document.querySelectorAll(".lang-btn")[0].classList.add("active");
+      if (l === "en") document.querySelectorAll(".lang-btn")[1].classList.add("active");
+      if (l === "fa") document.querySelectorAll(".lang-btn")[2].classList.add("active");
+
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const k = el.dataset.i18n;
+        el.textContent = text(k);
+      });
+
+      renderSummary();
+    }
+
+    function renderSummary() {
+      const box = document.getElementById("summaryBox");
+      const raw = sessionStorage.getItem("last_order_summary");
+
+      if (!raw) {
+        box.innerHTML = `<div class="summary-row"><div class="summary-value">${text("noData")}</div></div>`;
+        return;
+      }
+
+      const data = JSON.parse(raw);
+
+      const itemsHtml = (data.items || []).map(item => `
+        <div>${item.qty} × ${item.name} — KD ${Number(item.price * item.qty).toLocaleString()}</div>
+      `).join("");
+
+      const locationValue = data.location_text || (
+        data.latitude && data.longitude ? `${data.latitude}, ${data.longitude}` : text("noValue")
+      );
+
+      box.innerHTML = `
+        <div class="summary-row">
+          <div class="summary-label">${text("orderId")}</div>
+          <div class="summary-value">${data.order_id || text("noValue")}</div>
+        </div>
+
+        <div class="summary-row">
+          <div class="summary-label">${text("customer")}</div>
+          <div class="summary-value">${data.customer_name || text("noValue")}</div>
+        </div>
+
+        <div class="summary-row">
+          <div class="summary-label">${text("phone")}</div>
+          <div class="summary-value">${data.phone || text("noValue")}</div>
+        </div>
+
+        <div class="summary-row">
+          <div class="summary-label">${text("address")}</div>
+          <div class="summary-value">${data.address || text("noValue")}</div>
+        </div>
+
+        <div class="summary-row">
+          <div class="summary-label">${text("location")}</div>
+          <div class="summary-value">${locationValue}</div>
+        </div>
+
+        <div class="summary-row">
+          <div class="summary-label">${text("note")}</div>
+          <div class="summary-value">${data.note || text("noValue")}</div>
+        </div>
+
+        <div class="summary-row">
+          <div class="summary-label">${text("items")}</div>
+          <div class="summary-value">${itemsHtml || text("noValue")}</div>
+        </div>
+
+        <div class="summary-row">
+          <div class="summary-label">${text("total")}</div>
+          <div class="summary-value">KD ${Number(data.total || 0).toLocaleString()}</div>
+        </div>
+
+        <div class="summary-row">
+          <div class="summary-label">${text("time")}</div>
+          <div class="summary-value">${data.created_at || text("noValue")}</div>
+        </div>
+      `;
+    }
+
+    setLang(lang);
+  </script>
+</body>
+</html>
