@@ -33,43 +33,50 @@
     </div>
 
     <div class="panel">
+      <h2 data-i18n="formTitle">إضافة أو تعديل منتج</h2>
+
       <div class="form-grid">
         <div>
           <label id="labelName">اسم المنتج</label>
-          <input id="name">
+          <input id="name" />
         </div>
 
         <div>
           <label id="labelPrice">السعر</label>
-          <input id="price" type="number" step="0.001">
-        </div>
-
-        <div>
-          <label id="labelImage">الصورة</label>
-          <input id="imageFile" type="file" accept="image/*" onchange="previewImage()">
-          <div class="preview-box" id="previewBox"></div>
-          <div class="small-text" id="currentImageText"></div>
+          <input id="price" type="number" step="0.001" min="0" />
         </div>
 
         <div>
           <label id="labelCategory">التصنيف</label>
-          <input id="category">
+          <input id="category" />
         </div>
 
         <div>
           <label id="labelStock">المخزون</label>
-          <input id="stock" type="number" min="0">
+          <input id="stock" type="number" min="0" />
+        </div>
+
+        <div style="grid-column:1 / -1;">
+          <label id="labelImage">الصورة</label>
+          <input id="imageFile" type="file" accept="image/*" onchange="previewImage()" />
+          <div class="preview-box" id="previewBox"></div>
+          <div class="small-text" id="currentImageText"></div>
         </div>
       </div>
 
       <div class="spacer"></div>
-      <button class="btn btn-main" id="saveBtn" onclick="saveFlower()">حفظ المنتج</button>
-      <button class="btn btn-soft" id="resetBtn" onclick="resetForm()">تنظيف</button>
+
+      <div class="action-row">
+        <button class="btn btn-main" id="saveBtn" onclick="saveFlower()">حفظ المنتج</button>
+        <button class="btn btn-soft" id="resetBtn" onclick="resetForm()">تنظيف</button>
+      </div>
     </div>
 
     <div class="spacer"></div>
 
     <div class="panel table-wrap">
+      <h2 data-i18n="listTitle">المنتجات الحالية</h2>
+
       <table>
         <thead>
           <tr>
@@ -93,6 +100,8 @@
         subbrand: "للبيع بالتجزئة للزهور والورود والنباتات",
         title: "إدارة المنتجات",
         subtitle: "أضف المنتجات وعدّلها واحذفها بسهولة من لوحة أنيقة وسريعة.",
+        formTitle: "إضافة أو تعديل منتج",
+        listTitle: "المنتجات الحالية",
         name: "اسم المنتج",
         price: "السعر",
         image: "الصورة",
@@ -119,12 +128,16 @@
         placeholderCategory: "مثلاً ورد، نباتات",
         placeholderStock: "مثلاً 10",
         currentImage: "الصورة الحالية:",
-        chooseNewImage: "يمكنك اختيار صورة جديدة أو تركها كما هي"
+        chooseNewImage: "يمكنك اختيار صورة جديدة أو تركها كما هي",
+        uploading: "جاري الرفع...",
+        saveEdit: "تحديث المنتج"
       },
       en: {
         subbrand: "Retail sale of flowers, roses and plants",
         title: "Manage Products",
         subtitle: "Add, edit and delete products easily from a clean elegant panel.",
+        formTitle: "Add or Edit Product",
+        listTitle: "Current Products",
         name: "Product Name",
         price: "Price",
         image: "Image",
@@ -151,12 +164,16 @@
         placeholderCategory: "e.g. roses, plants",
         placeholderStock: "e.g. 10",
         currentImage: "Current image:",
-        chooseNewImage: "You can choose a new image or keep the current one"
+        chooseNewImage: "You can choose a new image or keep the current one",
+        uploading: "Uploading...",
+        saveEdit: "Update Product"
       },
       fa: {
         subbrand: "فروش خرده‌فروشی گل‌ها، رزها و گیاهان",
         title: "مدیریت محصولات",
         subtitle: "محصولات را با یک پنل شیک و سریع اضافه، ویرایش و حذف کن.",
+        formTitle: "افزودن یا ویرایش محصول",
+        listTitle: "محصولات فعلی",
         name: "نام محصول",
         price: "قیمت",
         image: "تصویر",
@@ -183,7 +200,9 @@
         placeholderCategory: "مثلاً رز، گیاه",
         placeholderStock: "مثلاً 10",
         currentImage: "تصویر فعلی:",
-        chooseNewImage: "می‌توانی تصویر جدید انتخاب کنی یا همین را نگه داری"
+        chooseNewImage: "می‌توانی تصویر جدید انتخاب کنی یا همین را نگه داری",
+        uploading: "در حال آپلود...",
+        saveEdit: "به‌روزرسانی محصول"
       }
     };
 
@@ -209,7 +228,7 @@
 
       document.querySelectorAll("[data-i18n]").forEach(el => {
         const key = el.dataset.i18n;
-        el.textContent = T[lang][key] || "";
+        el.textContent = text(key);
       });
 
       document.getElementById("labelName").textContent = text("name");
@@ -217,7 +236,7 @@
       document.getElementById("labelImage").textContent = text("image");
       document.getElementById("labelCategory").textContent = text("category");
       document.getElementById("labelStock").textContent = text("stock");
-      document.getElementById("saveBtn").textContent = text("save");
+      document.getElementById("saveBtn").textContent = editingId ? text("saveEdit") : text("save");
       document.getElementById("resetBtn").textContent = text("reset");
 
       document.getElementById("name").placeholder = text("placeholderName");
@@ -255,18 +274,30 @@
       const fileInput = document.getElementById("imageFile");
       if (!fileInput.files.length) return currentImageUrl;
 
-      const fd = new FormData();
-      fd.append("image", fileInput.files[0]);
+      const saveBtn = document.getElementById("saveBtn");
+      const oldText = saveBtn.textContent;
+      saveBtn.textContent = text("uploading");
+      saveBtn.disabled = true;
 
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: fd
-      });
+      try {
+        const fd = new FormData();
+        fd.append("image", fileInput.files[0]);
 
-      if (!res.ok) throw new Error(await res.text());
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: fd
+        });
 
-      const data = await res.json();
-      return data.url;
+        if (!res.ok) {
+          throw new Error(await res.text());
+        }
+
+        const data = await res.json();
+        return data.url;
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = editingId ? text("saveEdit") : oldText;
+      }
     }
 
     async function loadList() {
@@ -288,7 +319,9 @@
           <td>KD ${Number(item.price || 0).toLocaleString()}</td>
           <td>${item.category || "-"}</td>
           <td>${Number(item.stock || 0)}</td>
-          <td>${item.image ? `<a href="${item.image}" target="_blank">${text("view")}</a>` : "-"}</td>
+          <td>
+            ${item.image ? `<a href="${item.image}" target="_blank">${text("view")}</a>` : "-"}
+          </td>
           <td>
             <div class="action-row">
               <button class="btn btn-soft" onclick="editFlower(${item.id})">${text("edit")}</button>
@@ -305,12 +338,19 @@
 
       editingId = item.id;
       currentImageUrl = item.image || "";
+
       document.getElementById("name").value = item.name || "";
       document.getElementById("price").value = item.price || "";
       document.getElementById("category").value = item.category || "";
       document.getElementById("stock").value = item.stock || "";
       document.getElementById("imageFile").value = "";
-      document.getElementById("previewBox").innerHTML = currentImageUrl ? `<img src="${currentImageUrl}" alt="">` : "";
+
+      document.getElementById("previewBox").innerHTML = currentImageUrl
+        ? `<img src="${currentImageUrl}" alt="">`
+        : "";
+
+      document.getElementById("saveBtn").textContent = text("saveEdit");
+
       renderCurrentImageText();
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -318,12 +358,15 @@
     function resetForm() {
       editingId = null;
       currentImageUrl = "";
+
       document.getElementById("name").value = "";
       document.getElementById("price").value = "";
       document.getElementById("category").value = "";
       document.getElementById("stock").value = "";
       document.getElementById("imageFile").value = "";
       document.getElementById("previewBox").innerHTML = "";
+      document.getElementById("saveBtn").textContent = text("save");
+
       renderCurrentImageText();
     }
 
@@ -371,10 +414,16 @@
     async function deleteFlower(id) {
       if (!confirm(text("deleteConfirm"))) return;
 
-      const res = await fetch(`/api/flowers/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/flowers/${id}`, {
+        method: "DELETE"
+      });
 
-      if (res.ok) loadList();
-      else alert(await res.text());
+      if (res.ok) {
+        if (editingId === id) resetForm();
+        loadList();
+      } else {
+        alert(await res.text());
+      }
     }
 
     setLang(lang);
