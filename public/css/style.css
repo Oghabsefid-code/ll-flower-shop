@@ -418,3 +418,20 @@ th {
     padding: 20px;
   }
 }
+html[dir="ltr"] th,
+html[dir="ltr"] td,
+html[dir="ltr"] body,
+html[dir="ltr"] .hero,
+html[dir="ltr"] .panel,
+html[dir="ltr"] .summary-box {
+  text-align: left;
+}
+
+html[dir="rtl"] th,
+html[dir="rtl"] td,
+html[dir="rtl"] body,
+html[dir="rtl"] .hero,
+html[dir="rtl"] .panel,
+html[dir="rtl"] .summary-box {
+  text-align: right;
+}

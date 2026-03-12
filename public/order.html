@@ -369,7 +369,7 @@
         return;
       }
 
-      box.innerHTML = flowers.map((f, idx) => `
+      box.innerHTML = flowers.map((f) => `
         <div class="card">
           <img
             src="${f.image || 'https://via.placeholder.com/600x400?text=Flower'}"
@@ -411,7 +411,7 @@
         cart.push({
           id: flower.id,
           name: flower.name,
-          price: flower.price,
+          price: Number(flower.price) || 0,
           qty: qty
         });
       }
@@ -462,8 +462,8 @@
           const lat = pos.coords.latitude;
           const lng = pos.coords.longitude;
 
-          locationData.latitude = lat;
-          locationData.longitude = lng;
+          locationData.latitude = String(lat);
+          locationData.longitude = String(lng);
           locationData.location_text = `${lat}, ${lng}`;
 
           document.getElementById("locationPreview").textContent =
@@ -564,7 +564,7 @@
       document.getElementById("locationPreview").textContent = text("noLocationYet");
 
       renderCart();
-      loadFlowers();
+      await loadFlowers();
 
       location.href = "/thankyou.html";
     }
