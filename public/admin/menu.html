@@ -271,7 +271,7 @@
     }
 
     async function loadList() {
-      const res = await fetch("/api/flowers");
+      const res = await fetch("/api/menu/add");
       const items = await res.json();
       const list = document.getElementById("list");
 
@@ -369,7 +369,7 @@
     async function deleteFlower(id) {
       if (!confirm(text("deleteConfirm"))) return;
 
-      const res = await fetch(`/api/flowers/${id}`, {
+      const res = await fetch("/api/menu/add"/${id}`, {
         method: "DELETE"
       });
 
