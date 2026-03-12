@@ -5,51 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>L&L - Order</title>
   <link rel="stylesheet" href="/css/style.css" />
-  <style>
-    .product-image-clickable {
-      cursor: zoom-in;
-      transition: transform 0.25s ease, box-shadow 0.25s ease, border-radius 0.25s ease;
-      position: relative;
-      z-index: 1;
-    }
-
-    .product-image-clickable.zoomed {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) scale(1.55);
-      max-width: 78vw;
-      max-height: 78vh;
-      width: auto;
-      height: auto;
-      object-fit: contain;
-      z-index: 99999;
-      border-radius: 20px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
-      background: #fff;
-      cursor: zoom-out;
-    }
-
-    .zoom-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.28);
-      z-index: 99998;
-      display: none;
-    }
-
-    .zoom-backdrop.show {
-      display: block;
-    }
-
-    @media (max-width: 768px) {
-      .product-image-clickable.zoomed {
-        max-width: 90vw;
-        max-height: 72vh;
-        transform: translate(-50%, -50%) scale(1.12);
-      }
-    }
-  </style>
 </head>
 <body>
   <div class="zoom-backdrop" id="zoomBackdrop" onclick="closeZoomedImage()"></div>
@@ -76,10 +31,12 @@
   <div class="wrap">
     <div class="hero">
       <h1 data-i18n="title">تسجيل الطلب</h1>
-      <p data-i18n="subtitle">اختر الزهور المطلوبة وحدد الكمية ثم أكمل بيانات الطلب.</p>
+      <p data-i18n="subtitle">اختر المنتجات المفضلة، حدّد الكمية، ثم أكمل بياناتك لإتمام الطلب بسهولة.</p>
     </div>
 
     <div id="flowers" class="grid"></div>
+
+    <div class="spacer"></div>
 
     <div class="panel">
       <h2 data-i18n="cartTitle">سلة الطلب</h2>
@@ -143,7 +100,7 @@
       ar: {
         subbrand: "للبيع بالتجزئة للزهور والورود والنباتات",
         title: "تسجيل الطلب",
-        subtitle: "اختر الزهور المطلوبة وحدد الكمية ثم أكمل بيانات الطلب.",
+        subtitle: "اختر المنتجات المفضلة، حدّد الكمية، ثم أكمل بياناتك لإتمام الطلب بسهولة.",
         cartTitle: "سلة الطلب",
         total: "المجموع: KD ",
         name: "اسم العميل",
@@ -165,7 +122,6 @@
         noStock: "الكمية المطلوبة أكبر من المخزون",
         noName: "أدخل اسم العميل",
         cartEmptyAlert: "السلة فارغة",
-        orderDone: "تم تسجيل الطلب",
         locationBtn: "تسجيل اللوكيشن",
         clearLocationBtn: "مسح اللوكيشن",
         gettingLocation: "جاري تحديد الموقع...",
@@ -187,7 +143,7 @@
       en: {
         subbrand: "Retail sale of flowers, roses and plants",
         title: "Place Your Order",
-        subtitle: "Choose flowers, set quantity, then complete your order details.",
+        subtitle: "Choose your favorite products, set quantity, then complete your details easily.",
         cartTitle: "Shopping Cart",
         total: "Total: KD ",
         name: "Customer Name",
@@ -209,7 +165,6 @@
         noStock: "Selected quantity exceeds stock",
         noName: "Enter customer name",
         cartEmptyAlert: "Cart is empty",
-        orderDone: "Order submitted",
         locationBtn: "Save Location",
         clearLocationBtn: "Clear Location",
         gettingLocation: "Getting location...",
@@ -231,7 +186,7 @@
       fa: {
         subbrand: "فروش خرده‌فروشی گل‌ها، رزها و گیاهان",
         title: "ثبت سفارش",
-        subtitle: "گل مورد نظر را انتخاب کن، تعداد را مشخص کن و اطلاعات سفارش را کامل کن.",
+        subtitle: "محصول دلخواهت را انتخاب کن، تعداد را مشخص کن و سفارش را راحت ثبت کن.",
         cartTitle: "سبد سفارش",
         total: "جمع کل: KD ",
         name: "نام مشتری",
@@ -253,7 +208,6 @@
         noStock: "تعداد انتخابی بیشتر از موجودی است",
         noName: "نام مشتری را وارد کن",
         cartEmptyAlert: "سبد خالی است",
-        orderDone: "سفارش ثبت شد",
         locationBtn: "ثبت لوکیشن",
         clearLocationBtn: "حذف لوکیشن",
         gettingLocation: "در حال دریافت لوکیشن...",
@@ -277,11 +231,7 @@
     let lang = localStorage.getItem("site_lang") || "ar";
     let flowers = [];
     let cart = [];
-    let locationData = {
-      latitude: "",
-      longitude: "",
-      location_text: ""
-    };
+    let locationData = { latitude: "", longitude: "", location_text: "" };
     let zoomedImage = null;
 
     function text(key) {
@@ -566,7 +516,7 @@
       renderCart();
       await loadFlowers();
 
-      location.href = "/thankyou.html";
+      location.href = "/thankyou";
     }
 
     document.addEventListener("keydown", function (e) {

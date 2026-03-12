@@ -52,7 +52,7 @@
   <div class="wrap">
     <div class="hero">
       <h1 data-i18n="title">الطلبات</h1>
-      <p data-i18n="subtitle">يتم تحديث الصفحة تلقائياً كل 10 ثواني</p>
+      <p data-i18n="subtitle">تحديث تلقائي كل 10 ثواني مع تنبيه للطلبات الجديدة.</p>
       <div class="note-line" data-i18n="liveNote">التنبيه الصوتي للطلبات الجديدة مفعل</div>
     </div>
 
@@ -82,7 +82,7 @@
       ar: {
         subbrand: "للبيع بالتجزئة للزهور والورود والنباتات",
         title: "الطلبات",
-        subtitle: "يتم تحديث الصفحة تلقائياً كل 10 ثواني",
+        subtitle: "تحديث تلقائي كل 10 ثواني مع تنبيه للطلبات الجديدة.",
         liveNote: "التنبيه الصوتي للطلبات الجديدة مفعل",
         customer: "العميل",
         phone: "الهاتف",
@@ -109,7 +109,7 @@
       en: {
         subbrand: "Retail sale of flowers, roses and plants",
         title: "Orders",
-        subtitle: "Page refreshes every 10 seconds",
+        subtitle: "Auto refresh every 10 seconds with new order alert.",
         liveNote: "New order sound alert is enabled",
         customer: "Customer",
         phone: "Phone",
@@ -136,7 +136,7 @@
       fa: {
         subbrand: "فروش خرده فروشی گل ها، رزها و گیاهان",
         title: "سفارش ها",
-        subtitle: "صفحه هر ۱۰ ثانیه رفرش می‌شود",
+        subtitle: "هر ۱۰ ثانیه رفرش خودکار با هشدار سفارش جدید.",
         liveNote: "هشدار صوتی سفارش جدید فعال است",
         customer: "مشتری",
         phone: "تلفن",
@@ -324,9 +324,7 @@
     async function changeStatus(id, status) {
       await fetch(`/api/orders/${id}/status`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status })
       });
     }
@@ -334,10 +332,7 @@
     async function deleteOrder(id) {
       if (!confirm(text("deleteConfirm"))) return;
 
-      await fetch(`/api/orders/${id}`, {
-        method: "DELETE"
-      });
-
+      await fetch(`/api/orders/${id}`, { method: "DELETE" });
       loadOrders();
     }
 

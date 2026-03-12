@@ -29,7 +29,7 @@
   <div class="wrap">
     <div class="hero">
       <h1 data-i18n="title">إدارة المنتجات</h1>
-      <p data-i18n="subtitle">أضف الزهور وعدّلها واحذفها من هنا.</p>
+      <p data-i18n="subtitle">أضف المنتجات وعدّلها واحذفها بسهولة من لوحة أنيقة وسريعة.</p>
     </div>
 
     <div class="panel">
@@ -92,7 +92,7 @@
       ar: {
         subbrand: "للبيع بالتجزئة للزهور والورود والنباتات",
         title: "إدارة المنتجات",
-        subtitle: "أضف الزهور وعدّلها واحذفها من هنا.",
+        subtitle: "أضف المنتجات وعدّلها واحذفها بسهولة من لوحة أنيقة وسريعة.",
         name: "اسم المنتج",
         price: "السعر",
         image: "الصورة",
@@ -124,7 +124,7 @@
       en: {
         subbrand: "Retail sale of flowers, roses and plants",
         title: "Manage Products",
-        subtitle: "Add, edit and delete flowers from here.",
+        subtitle: "Add, edit and delete products easily from a clean elegant panel.",
         name: "Product Name",
         price: "Price",
         image: "Image",
@@ -156,7 +156,7 @@
       fa: {
         subbrand: "فروش خرده‌فروشی گل‌ها، رزها و گیاهان",
         title: "مدیریت محصولات",
-        subtitle: "از اینجا گل‌ها را اضافه، ویرایش و حذف کن.",
+        subtitle: "محصولات را با یک پنل شیک و سریع اضافه، ویرایش و حذف کن.",
         name: "نام محصول",
         price: "قیمت",
         image: "تصویر",
@@ -263,9 +263,7 @@
         body: fd
       });
 
-      if (!res.ok) {
-        throw new Error(await res.text());
-      }
+      if (!res.ok) throw new Error(await res.text());
 
       const data = await res.json();
       return data.url;
@@ -307,17 +305,12 @@
 
       editingId = item.id;
       currentImageUrl = item.image || "";
-
       document.getElementById("name").value = item.name || "";
       document.getElementById("price").value = item.price || "";
       document.getElementById("category").value = item.category || "";
       document.getElementById("stock").value = item.stock || "";
-
       document.getElementById("imageFile").value = "";
-      document.getElementById("previewBox").innerHTML = currentImageUrl
-        ? `<img src="${currentImageUrl}" alt="">`
-        : "";
-
+      document.getElementById("previewBox").innerHTML = currentImageUrl ? `<img src="${currentImageUrl}" alt="">` : "";
       renderCurrentImageText();
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -325,14 +318,12 @@
     function resetForm() {
       editingId = null;
       currentImageUrl = "";
-
       document.getElementById("name").value = "";
       document.getElementById("price").value = "";
       document.getElementById("category").value = "";
       document.getElementById("stock").value = "";
       document.getElementById("imageFile").value = "";
       document.getElementById("previewBox").innerHTML = "";
-
       renderCurrentImageText();
     }
 
@@ -380,15 +371,10 @@
     async function deleteFlower(id) {
       if (!confirm(text("deleteConfirm"))) return;
 
-      const res = await fetch(`/api/flowers/${id}`, {
-        method: "DELETE"
-      });
+      const res = await fetch(`/api/flowers/${id}`, { method: "DELETE" });
 
-      if (res.ok) {
-        loadList();
-      } else {
-        alert(await res.text());
-      }
+      if (res.ok) loadList();
+      else alert(await res.text());
     }
 
     setLang(lang);

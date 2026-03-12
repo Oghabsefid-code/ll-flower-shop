@@ -272,8 +272,7 @@ app.post("/api/orders", async (req, res) => {
       }
 
       const unitPrice = Number(flower.price) || 0;
-      const lineTotal = unitPrice * qty;
-      total += lineTotal;
+      total += unitPrice * qty;
 
       finalItems.push({
         id: flower.id,
@@ -284,10 +283,7 @@ app.post("/api/orders", async (req, res) => {
     }
 
     for (const item of finalItems) {
-      await run(
-        "UPDATE menu SET stock = stock - ? WHERE id = ?",
-        [item.qty, item.id]
-      );
+      await run("UPDATE menu SET stock = stock - ? WHERE id = ?", [item.qty, item.id]);
     }
 
     const result = await run(
@@ -354,8 +350,20 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+app.get("/order", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "order.html"));
+});
+
+app.get("/orders", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "orders.html"));
+});
+
 app.get("/admin", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "admin.html"));
+});
+
+app.get("/thankyou", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "thankyou.html"));
 });
 
 /* ---------- START ---------- */
